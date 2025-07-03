@@ -71,7 +71,7 @@
                 var privkey = nobleSecp256k1.utils.randomPrivateKey();
                 var privhex = bytesToHex( privkey );
                 var nsec = privkeyToNsec( privhex );
-                $( `.generated_nsec` ).innerText = privkeyToNsec;
+                $( `.generated_nsec` ).innerText = nsec;
             }
             $( `.convert_nsec` ).onclick = () => {
                 var nsec = $( `.nsec_or_hex` ).value;
