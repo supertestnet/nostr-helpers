@@ -160,7 +160,7 @@
             $( `.convert_nevent` ).onclick = () => {
                 var nevent = $( `.nevent_or_hex` ).value;
                 var nevent_in_hex = nevent;
-                var started_as_note = npub.startsWith( "note1" );
+                var started_as_note = nevent.startsWith( "note1" );
                 if ( started_as_note ) nevent_in_hex = privkeyFromNsec( nevent );
                 if ( nevent.startsWith( "ne" ) ) var [ nevent_in_hex ] = convertNEvent( nevent_in_hex );
                 var note_one = hashToNoteOne( nevent_in_hex );
