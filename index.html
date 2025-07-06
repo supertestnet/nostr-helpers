@@ -11,6 +11,7 @@
             var privkeyToNsec = hex => bech32.bech32.encode( "nsec", bech32.bech32.toWords( hexToBytes( hex, "hex" ) ) );
             var privkeyFromNsec = nsec => bytesToHex( bech32.bech32.fromWords( bech32.bech32.decode( nsec ).words ) );
             var pubkeyToNpub = hex => bech32.bech32.encode( "npub", bech32.bech32.toWords( hexToBytes( hex ) ) );
+            var hashToNoteOne = hex => bech32.bech32.encode( "note", bech32.bech32.toWords( hexToBytes( hex ) ) );
             var hexToText = hex => {
                 var bytes = new Uint8Array( Math.ceil( hex.length / 2 ) );
                 var i; for ( i=0; i<hex.length; i++ ) bytes[ i ] = parseInt( hex.substr( i * 2, 2 ), 16 );
@@ -120,6 +121,14 @@
         <p><input class="nprofile_relays"></p>
         <p class="converted_npub">&nbsp;</p>
         <p><button class="convert_npub">Convert npub</button></p>
+        <hr>
+        <h2>Convert nevent</h2>
+        <p>Enter an nevent or a hex event id or note1 note id</p>
+        <p><input class="nevent_or_hex"></p>
+        <p>If you want to convert the thing you entered into an nevent, or change the relays in an existing nevent, enter the full set of relays you want, comma-separated (e.g. "wss://relay.damus.io,wss://nostrue.com" -- but remove the quotation marks)</p>
+        <p><input class="nevent_relays"></p>
+        <p class="converted_nevent">&nbsp;</p>
+        <p><button class="convert_nevent">Convert nevent</button></p>
         <script>
             $( `.generate_nsec` ).onclick = () => {
                 var privkey = nobleSecp256k1.utils.randomPrivateKey();
@@ -147,6 +156,21 @@
                     thing_to_display = convertPubkeyAndRelaysToNprofile( "nprofile", pubkey_in_hex, relays );
                 }
                 $( `.converted_npub` ).innerText = thing_to_display;
+            }
+            $( `.convert_nevent` ).onclick = () => {
+                var nevent = $( `.nevent_or_hex` ).value;
+                var nevent_in_hex = nevent;
+                var started_as_note = npub.startsWith( "note1" );
+                if ( started_as_note ) nevent_in_hex = privkeyFromNsec( nevent );
+                if ( nevent.startsWith( "ne" ) ) var [ nevent_in_hex ] = convertNEvent( nevent_in_hex );
+                var note_one = hashToNoteOne( nevent_in_hex );
+                var relays = null;
+                if ( $( '.nevent_relays' ).value ) relays = $( '.nevent_relays' ).value.split( "," );
+                var thing_to_display = started_as_note ? nevent_in_hex : note_one;
+                if ( relays ) {
+                    thing_to_display = convertPubkeyAndRelaysToNprofile( "nevent", nevent_in_hex, relays );
+                }
+                $( `.converted_nevent` ).innerText = thing_to_display;
             }
         </script>
     </body>
