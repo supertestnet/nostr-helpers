@@ -10,6 +10,51 @@
             var bytesToHex = bytes => bytes.reduce( ( str, byte ) => str + byte.toString( 16 ).padStart( 2, "0" ), "" );
             var privkeyToNsec = hex => bech32.bech32.encode( "nsec", bech32.bech32.toWords( hexToBytes( hex, "hex" ) ) );
             var privkeyFromNsec = nsec => bytesToHex( bech32.bech32.fromWords( bech32.bech32.decode( nsec ).words ) );
+            var pubkeyToNpub = hex => bech32.bech32.encode( "npub", bech32.bech32.toWords( hexToBytes( hex ) ) );
+            var hexToText = hex => {
+                var bytes = new Uint8Array( Math.ceil( hex.length / 2 ) );
+                var i; for ( i=0; i<hex.length; i++ ) bytes[ i ] = parseInt( hex.substr( i * 2, 2 ), 16 );
+                var text = new TextDecoder().decode( bytes );
+                return text;
+            }
+            var textToHex = text => {
+                var encoded = new TextEncoder().encode( text );
+                return Array.from( encoded )
+                    .map( x => x.toString( 16 ).padStart( 2, "0" ) )
+                    .join( "" );
+            }
+            var convertNEvent = nevent => {
+                var arr = bech32.bech32.fromWords( bech32.bech32.decode( nevent, 100_000 ).words );
+                var hex = bytesToHex( arr );
+                if ( !hex.startsWith( "0020" ) ) var event_id = hex.substring( hex.length - 64 );
+                else var event_id = hex.substring( 4, 68 );
+                if ( !hex.startsWith( "0020" ) ) hex = hex.substring( 0, hex.length - 64 );
+                else hex = hex.substring( 68 );
+                var relays = [];
+                var loop = () => {
+                    if ( hex.startsWith( "01" ) ) {
+                        var relay_length = parseInt( hex.substring( 2, 4 ), 16 );
+                        relays.push( hexToText( hex.substring( 4, 4 + relay_length * 2 ) ) );
+                        hex = hex.substring( 4 + relay_length * 2 );
+                        loop();
+                    }
+                }
+                loop();
+                return [ event_id, relays ];
+            }
+            var convertPubkeyAndRelaysToNprofile = ( prefix, pubkey, relays ) => {
+                var relays_str = "";
+                relays.forEach( relay => {
+                    var relay_str = textToHex( relay );
+                    var len = ( relay_str.length / 2 ).toString( 16 );
+                    if ( len.length % 2 ) len = "0" + len;
+                    relays_str = relays_str + "01" + len + relay_str;
+                });
+                var hex = relays_str + "0020" + pubkey;
+                var bytes = hexToBytes( hex );
+                var nevent = bech32.bech32.encode( prefix, bech32.bech32.toWords( bytes ), 100_000 );
+            	return nevent;
+            }
         </script>
         <style>
             * {
@@ -63,10 +108,18 @@
         <p class="generated_nsec">&nbsp;</p>
         <hr>
         <h2>Convert nsec</h2>
-        <p>Enter nsec or hex</p>
+        <p>Enter an nsec or a hex privkey</p>
         <p><input class="nsec_or_hex"></p>
         <p class="converted_nsec">&nbsp;</p>
         <p><button class="convert_nsec">Convert nsec</button></p>
+        <hr>
+        <h2>Convert npub</h2>
+        <p>Enter an npub or a hex pubkey or an nprofile</p>
+        <p><input class="npub_or_hex"></p>
+        <p>If you want to convert the thing you entered into an nprofile, or change the relays in an existing nprofile, enter the full set of relays you want, comma-separated (e.g. "wss://relay.damus.io,wss://nostrue.com")</p>
+        <p><input class="nprofile_relays"></p>
+        <p class="converted_npub">&nbsp;</p>
+        <p><button class="convert_npub">Convert npub</button></p>
         <script>
             $( `.generate_nsec` ).onclick = () => {
                 var privkey = nobleSecp256k1.utils.randomPrivateKey();
@@ -79,6 +132,21 @@
                 if ( nsec.startsWith( "n" ) ) var converted = privkeyFromNsec( nsec );
                 else var converted = privkeyToNsec( nsec );
                 $( `.converted_nsec` ).innerText = converted;
+            }
+            $( `.convert_npub` ).onclick = () => {
+                var npub = $( `.npub_or_hex` ).value;
+                var pubkey_in_hex = npub;
+                var started_as_npub = npub.startsWith( "npu" );
+                if ( started_as_npub ) pubkey_in_hex = privkeyFromNsec( npub );
+                if ( npub.startsWith( "npr" ) ) var [ pubkey_in_hex ] = convertNEvent( npub );
+                npub = pubkeyToNpub( pubkey_in_hex );
+                var relays = null;
+                if ( $( '.nprofile_relays' ).value ) relays = $( '.nprofile_relays' ).value.split( "," );
+                var thing_to_display = started_as_npub ? pubkey_in_hex : npub;
+                if ( relays ) {
+                    thing_to_display = convertPubkeyAndRelaysToNprofile( "nprofile", pubkey_in_hex, relays );
+                }
+                $( `.converted_npub` ).innerText = thing_to_display;
             }
         </script>
     </body>
