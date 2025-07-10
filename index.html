@@ -152,7 +152,7 @@
                 npub = pubkeyToNpub( pubkey_in_hex );
                 var relays = null;
                 if ( $( '.nprofile_relays' ).value ) relays = $( '.nprofile_relays' ).value.split( "," );
-                else if ( user_relays.length ) $( '.nprofile_relays ).value = user_relays.join( "," );
+                else if ( user_relays.length ) $( '.nprofile_relays' ).value = user_relays.join( "," );
                 var thing_to_display = started_as_npub ? pubkey_in_hex : npub;
                 if ( relays ) {
                     thing_to_display = convertPubkeyAndRelaysToNprofile( "nprofile", pubkey_in_hex, relays );
@@ -169,7 +169,7 @@
                 var note_one = hashToNoteOne( nevent_in_hex );
                 var relays = null;
                 if ( $( '.nevent_relays' ).value ) relays = $( '.nevent_relays' ).value.split( "," );
-                else if ( user_relays.length ) $( '.nprofile_relays ).value = nevent_relays.join( "," );
+                else if ( user_relays.length ) $( '.nevent_relays' ).value = nevent_relays.join( "," );
                 var thing_to_display = started_as_note ? nevent_in_hex : note_one;
                 if ( relays ) {
                     thing_to_display = convertPubkeyAndRelaysToNprofile( "nevent", nevent_in_hex, relays );
