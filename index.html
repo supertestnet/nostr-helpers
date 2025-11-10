@@ -129,6 +129,13 @@
         <p><input class="nevent_relays"></p>
         <p class="converted_nevent">&nbsp;</p>
         <p><button class="convert_nevent">Convert nevent</button></p>
+        <h2>Send NIP04 DM</h2>
+        <p>Enter a hex pubkey</p>
+        <p><input class="hex_pubkey"></p>
+        <p>Enter a relay</p>
+        <p><input class="relay" placeholder="wss://relay.damus.io"></p>
+        <p>Enter a message</p>
+        <p><textarea class="NIP04_message"></p>
         <script>
             $( `.generate_nsec` ).onclick = () => {
                 var privkey = nobleSecp256k1.utils.randomPrivateKey();
